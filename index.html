@@ -1,47 +1,77 @@
 <!DOCTYPE html>
 <html>
     <head>
+        
         <script src="deps/glMatrix-0.9.5.min.js"></script>
         <script src="glt.js"></script>
 
-
         <script id="vs" type="x-shader/x-vertex">
+            
             attribute vec2 a_Position;
 
-            uniform mat4 u_MVMatrix;
-            uniform mat4 u_PMatrix;
-
             void main() {
-                gl_Position = vec4(a_pos, 1.0, 1.0);
+                gl_Position = vec4(a_Position, 0, 1);
             }
+        
         </script>
 
 
         <script id="fs" type="x-shader/x-fragment">
+            
+            precision mediump float;
+            
             void main() {
-                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+                gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
             }
+        
         </script>
 
 
         <script>
             var     canvas,
                     gl,
-                    program
+                    program;
 
             function init() {
                 canvas = document.getElementById('canvas');
+                
                 gl = glt.getGL(canvas);
 
+
+
                 var vs = glt.compileShader(gl, 'vs');
-                console.log(vs);
+                var fs = glt.compileShader(gl, 'fs');
+                
+                program = glt.createProgram(gl, [vs,fs]);
+                gl.useProgram(program);
 
+                
 
+                program.vertexPosAttrib = gl.getAttribLocation(program, 'a_Position');
+                gl.enableVertexAttribArray(program.vertexPosAttrib);
+                
+
+                var vertexPosBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, vertexPosBuffer);
+                var vertices = [-0.5, -0.5, 0.5, -0.5, 0, 0.5];
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+                /*  2
+                   /\
+                  /. \
+                0/____\1
+                */
+
+                gl.vertexAttribPointer(program.vertexPosAttrib, 2, gl.FLOAT, false, 0, 0);
+               
+                gl.drawArrays(gl.TRIANGLES, 0, 3);
+                
             }
 
             function draw() {
 
             }
+            
         </script>
 
     </head>

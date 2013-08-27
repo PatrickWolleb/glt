@@ -36,7 +36,7 @@
         gl.compileShader(shader);
 
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            throw new Error('Shader Compilation Error');
+            throw new Error('Shader Compilation Error: ' + gl.getShaderInfoLog(shader) );
             return null;
         }
 
@@ -59,7 +59,6 @@
     function getGL(canvas) {
         try {
             gl = canvas.getContext("experimental-webgl");
-            console.log('HERE')
             gl.viewportWidth = canvas.width;
             gl.viewportHeight = canvas.height;
 
