@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="deps/glMatrix-0.9.5.min.js"></script>
+        <script src="glt.js"></script>
+
+
+        <script id="vs" type="x-shader/x-vertex">
+            attribute vec2 a_Position;
+
+            uniform mat4 u_MVMatrix;
+            uniform mat4 u_PMatrix;
+
+            void main() {
+                gl_Position = vec4(a_pos, 1.0, 1.0);
+            }
+        </script>
+
+
+        <script id="fs" type="x-shader/x-fragment">
+            void main() {
+                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            }
+        </script>
+
+
+        <script>
+            var     canvas,
+                    gl,
+                    program
+
+            function init() {
+                canvas = document.getElementById('canvas');
+                gl = glt.getGL(canvas);
+
+                var vs = glt.compileShader(gl, 'vs');
+                console.log(vs);
+
+
+            }
+
+            function draw() {
+
+            }
+        </script>
+
+    </head>
+
+    <body onload="init()">
+        <canvas id="canvas" width="400" height="300" />
+    </body>
+
+
+</html>
