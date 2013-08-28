@@ -5,14 +5,20 @@
         <script src="deps/glMatrix-0.9.5.min.js"></script>
         <script src="glt.js"></script>
 
+        <style type="text/css">
+        body { background: #333; }
+        canvas { background: #eee; }
+
+        </style>
+
         <script id="vs" type="x-shader/x-vertex">
             
-            attribute vec2 a_Position;
-            varying vec2 v_TexCoord;
+            attribute vec2 aPosition;
+            varying vec2 vTexCoord;
 
             void main() {
-                gl_Position = vec4(a_Position, 0, 1);
-                v_TexCoord = a_Position;
+                gl_Position = vec4(aPosition, 0, 1);
+                vTexCoord = aPosition;
             }
         
         </script>
@@ -20,12 +26,43 @@
 
         <script id="fs" type="x-shader/x-fragment">
             
-            precision mediump float;
-            
-            varying vec2 v_TexCoord;
+            #ifdef GL_ES
+                precision highp float;
+            #endif
+
+            uniform sampler2D uSampler;
+
+            varying vec2 vTexCoord;
 
             void main() {
-                gl_FragColor = vec4(v_TexCoord, 0.0, 1.0);
+                gl_FragColor = texture2D(uSampler, vTexCoord);
+            }
+        
+        </script>
+
+
+
+        <script id="vsUpdate" type="x-shader/x-vertex">
+            
+            attribute vec2 aPosition;
+
+            void main() {
+                gl_Position = vec4(aPosition, 0, 1);
+            }
+        
+        </script>
+
+
+        <script id="fsUpdate" type="x-shader/x-fragment">
+            
+            #ifdef GL_ES
+                precision highp float;
+            #endif
+
+            uniform sampler2D uSampler;
+
+            void main() {
+                gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
             }
         
         </script>
@@ -34,39 +71,114 @@
         <script>
             var     canvas,
                     gl,
-                    program;
+                    program, pUpdate;
 
             function init() {
                 
                 canvas = document.getElementById('canvas');
                 
-                gl = glt.getGL(canvas);
-
-
-                var vs = glt.compileShader(gl, 'vs');
-                var fs = glt.compileShader(gl, 'fs');
+               
+                gl = glt.getGL(canvas, {premultipliedAlpha: true});
                 
-                program = glt.createProgram(gl, [vs,fs]);
-                gl.useProgram(program);
-
+                gl.getExtension('OES_texture_float');
+                gl.disable(gl.DEPTH_TEST);
                 
-                program.vertexPosAttrib = gl.getAttribLocation(program, 'a_Position');
+                /** UPDATE PROGRAM **************************************************/
+                var vs = glt.compileShader(gl, 'vsUpdate');
+                var fs = glt.compileShader(gl, 'fsUpdate');
+                pUpdate = glt.createProgram(gl, [vs,fs]);
+                
+                pUpdate.vertexPosAttrib = gl.getAttribLocation(pUpdate, 'aPosition');
+                pUpdate.samplerUniform = gl.getUniformLocation(pUpdate, 'uSampler');
+
+
+
+                /** DEBUG PROGRAM **************************************************/
+                vs = glt.compileShader(gl, 'vs');   
+                fs = glt.compileShader(gl, 'fs');
+                program = glt.createProgram(gl, [vs,fs]);    
+
+                program.vertexPosAttrib = gl.getAttribLocation(program, 'aPosition');
+                program.samplerUniform = gl.getUniformLocation(program, 'uSampler');
                 gl.enableVertexAttribArray(program.vertexPosAttrib);
+
+
+               
+
+                var texture;
+                var image = new Image();
+                image.onload = function() {
+
+                    var stateTexSize = 1;
+ 
+                    var stateData = new Float32Array(stateTexSize * stateTexSize * 3);
+                    stateData[0] = 0.0;
+                    stateData[1] = 0.0;
+                    stateData[2] = 0.0;
+
+
+                    /** DRAW TO DEBUG *************************************************/
+                    gl.useProgram(program);
+
+                    var texture = glt.createStateTexture(gl);
+                    gl.activeTexture(gl.TEXTURE0);
+                    gl.uniform1i(program.samplerUniform, 0);
+
+                    gl.bindTexture(gl.TEXTURE_2D, texture);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, stateTexSize, stateTexSize, 0, gl.RGB, gl.FLOAT, stateData);
+
+                    var quad = glt.createArrayBuffer(gl, [ 0.5, 0.5,   1, 0.5,   0.5, 1,   1, 1 ], 2);
+                    gl.vertexAttribPointer(program.vertexPosAttrib, quad.numComponents, gl.FLOAT, false, 0, 0);
+
+                    gl.drawArrays(gl.TRIANGLE_STRIP, 0, quad.numItems);
+
+
+
+
+                    /** DRAW TO FRAMEBUFFER --> UPDATE *************************************************/
+
+                    gl.useProgram(pUpdate);
+
+                    var nextTexture = glt.createStateTexture(gl);
+                    gl.bindTexture(gl.TEXTURE_2D, nextTexture);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, stateTexSize, stateTexSize, 0, gl.RGB, gl.FLOAT, null);
+                    
+                    var framebuffer = gl.createFramebuffer();
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, nextTexture, 0);
+
+                    gl.clear(gl.COLOR_BUFFER_BIT);
+
+                    var quad = glt.screenQuad(gl);
+                    gl.vertexAttribPointer(pUpdate.vertexPosAttrib, quad.numComponents, gl.FLOAT, false, 0, 0);   
+                    gl.drawArrays(gl.TRIANGLE_STRIP, 0, quad.numItems);
+
+
+                     /** DRAW TO DEBUG  *************************************************/
+
+                    gl.useProgram(program); 
+                    gl.vertexAttribPointer(program.vertexPosAttrib, quad.numComponents, gl.FLOAT, false, 0, 0);   
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                    gl.drawArrays(gl.TRIANGLE_STRIP, 0, quad.numItems);
+                    // // Draw Triangle
+                    // var vertexPosBuffer = gl.createBuffer();
+                    // gl.bindBuffer(gl.ARRAY_BUFFER, vertexPosBuffer);
+                    // var vertices = [-0.5, -0.5, 0.5, -0.5, 0, 0.5];
+                    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+                    // gl.vertexAttribPointer(program.vertexPosAttrib, 2, gl.FLOAT, false, 0, 0);               
+                    // gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+
+                }   
+                image.src = 'logo.png'
                 
 
-                var vertexPosBuffer = gl.createBuffer();
-                gl.bindBuffer(gl.ARRAY_BUFFER, vertexPosBuffer);
-                var vertices = [-0.5, -0.5, 0.5, -0.5, 0, 0.5];
-                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+                
 
-                /*  2
-                   /\
-                  /. \
-                0/____\1
-                */
 
-                gl.vertexAttribPointer(program.vertexPosAttrib, 2, gl.FLOAT, false, 0, 0);               
-                gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+               
+
                 
             }
 

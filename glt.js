@@ -56,11 +56,12 @@
         return p;
     }
 
-    function getGL(canvas) {
+    function getGL(canvas, options) {
         try {
-            gl = canvas.getContext("experimental-webgl");
+            gl = canvas.getContext("experimental-webgl", options);
             gl.viewportWidth = canvas.width;
             gl.viewportHeight = canvas.height;
+
 
             return gl
         } catch (e) {
@@ -71,6 +72,48 @@
 
     }
 
+    function screenQuad(gl) {
+        var vertexPosBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexPosBuffer);
+        var vertices = [-1, -1, 1, -1, -1, 1, 1, 1];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        vertexPosBuffer.numComponents = 2;
+        vertexPosBuffer.numItems = 4;
+        return vertexPosBuffer;
+    }
+
+    function createArrayBuffer(gl, vertices, components) {
+        var buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        buffer.numComponents = components;
+        buffer.numItems = vertices.length / components;
+        return buffer;
+    }
+
+    function createTexture(gl) {
+        var t = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, t);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        return t;
+    }
+
+    function createStateTexture(gl) {
+        var t = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, t);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        return t;
+    }
+
 
     window.glt = {
 
@@ -78,16 +121,28 @@
             return getShader(gl, shader);
         },
 
-        loadShader : function() {
+        createTexture : function(gl) {
+            return createTexture(gl);
+        },
 
+        createStateTexture : function(gl) {
+            return createStateTexture(gl);
         },
 
         createProgram : function(gl, shaders) {
             return createProgram(gl, shaders);
         },
 
-        getGL : function(canvas) {
+        getGL : function(canvas, options) {
             return getGL(canvas);
+        },
+
+        screenQuad : function(gl) {
+            return screenQuad(gl);
+        },
+
+        createArrayBuffer : function(gl, vertices, components) {
+            return createArrayBuffer(gl, vertices, components);
         }
 
 
