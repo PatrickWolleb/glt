@@ -50,7 +50,7 @@
         gl.linkProgram(p);
 
         if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
-            throw new Error('Shader Program Link Error');
+            throw new Error('Shader Program Link Error: ' + gl.getProgramInfoLog(p));
             return null;
         }
         return p;

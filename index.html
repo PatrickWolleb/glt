@@ -8,9 +8,11 @@
         <script id="vs" type="x-shader/x-vertex">
             
             attribute vec2 a_Position;
+            varying vec2 v_TexCoord;
 
             void main() {
                 gl_Position = vec4(a_Position, 0, 1);
+                v_TexCoord = a_Position;
             }
         
         </script>
@@ -20,8 +22,10 @@
             
             precision mediump float;
             
+            varying vec2 v_TexCoord;
+
             void main() {
-                gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+                gl_FragColor = vec4(v_TexCoord, 0.0, 1.0);
             }
         
         </script>
@@ -33,10 +37,10 @@
                     program;
 
             function init() {
+                
                 canvas = document.getElementById('canvas');
                 
                 gl = glt.getGL(canvas);
-
 
 
                 var vs = glt.compileShader(gl, 'vs');
@@ -46,7 +50,6 @@
                 gl.useProgram(program);
 
                 
-
                 program.vertexPosAttrib = gl.getAttribLocation(program, 'a_Position');
                 gl.enableVertexAttribArray(program.vertexPosAttrib);
                 
@@ -62,8 +65,7 @@
                 0/____\1
                 */
 
-                gl.vertexAttribPointer(program.vertexPosAttrib, 2, gl.FLOAT, false, 0, 0);
-               
+                gl.vertexAttribPointer(program.vertexPosAttrib, 2, gl.FLOAT, false, 0, 0);               
                 gl.drawArrays(gl.TRIANGLES, 0, 3);
                 
             }
@@ -71,7 +73,7 @@
             function draw() {
 
             }
-            
+
         </script>
 
     </head>
