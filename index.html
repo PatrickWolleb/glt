@@ -66,7 +66,7 @@
             void main() {
 
                 vec4 pos = texture2D(uSampler,vec2(0.0, 0.0));
-                pos.x += 0.2;
+                pos.x += 0.0002;
 
                 gl_FragColor = pos;
             }
@@ -78,7 +78,7 @@
             var     canvas,
                     gl,
                     program, pUpdate,
-                    texture1, texture2, currentTexture,
+                    texture1, texture2, textures,
                     framebuffer,
                     screenQuad,
                     debugQuad,
@@ -135,18 +135,12 @@
 
                     texture = glt.createStateTexture(gl);
                     gl.activeTexture(gl.TEXTURE0);
-                    gl.uniform1i(program.samplerUniform, 0);
-
                     gl.bindTexture(gl.TEXTURE_2D, texture);
                     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, stateTexSize, stateTexSize, 0, gl.RGB, gl.FLOAT, stateData);
 
-                    var quad = glt.createArrayBuffer(gl, [ 0.5, 0.5,   1, 0.5,   0.5, 1,   1, 1 ], 2);
-                    gl.vertexAttribPointer(program.vertexPosAttrib, quad.numComponents, gl.FLOAT, false, 0, 0);
-
-                    gl.drawArrays(gl.TRIANGLE_STRIP, 0, quad.numItems);
-
 
                     texture2 = glt.createStateTexture(gl);
+                    gl.activeTexture(gl.TEXTURE1);
                     gl.bindTexture(gl.TEXTURE_2D, texture2);
                     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, stateTexSize, stateTexSize, 0, gl.RGB, gl.FLOAT, null);
 
@@ -155,9 +149,11 @@
                     debugQuad = glt.createArrayBuffer(gl, [ 0.5, -0.5,   1, -0.5,   0.5, -1,   1, -1 ], 2); 
                     
 
-                    
-                        
+                    textures = [texture, texture2];
+
+
                     draw();
+                    //setTimeout(draw, 1000);
                 }   
                 image.src = 'logo.png'                
             }
@@ -166,6 +162,7 @@
 
                 requestAnimFrame(draw);
 
+                
 
                 /** DRAW TO FRAMEBUFFER --> UPDATE *************************************************/
 
@@ -174,6 +171,17 @@
                 gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
                 
                 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture2, 0);
+
+                if( 2 % i == 0 ) {
+                    gl.activeTexture(gl.TEXTURE0);
+                    gl.bindTexture(gl.TEXTURE_2D, texture);
+                    gl.uniform1i(pUpdate.samplerUniform, 0);
+                }else {
+                    gl.activeTexture(gl.TEXTURE1);
+                    gl.bindTexture(gl.TEXTURE_2D, texture);
+                    gl.uniform1i(pUpdate.samplerUniform, 1);
+                }
+                
 
                 gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -189,9 +197,18 @@
 
                 gl.useProgram(program);
 
-                gl.activeTexture(gl.TEXTURE1);
-                gl.uniform1i(program.samplerUniform, 1);
-                gl.bindTexture(gl.TEXTURE_2D, texture2);
+
+                if( 2 % i == 0 ) {
+                    gl.activeTexture(gl.TEXTURE1);
+                    gl.bindTexture(gl.TEXTURE_2D, texture2);
+                    gl.uniform1i(program.samplerUniform, 1);
+                }else {
+                    gl.activeTexture(gl.TEXTURE0);
+                    gl.bindTexture(gl.TEXTURE_2D, texture2);
+                    gl.uniform1i(program.samplerUniform, 0);
+                }
+
+               
 
 
                 gl.bindBuffer(gl.ARRAY_BUFFER, debugQuad);
@@ -199,12 +216,16 @@
                 
                 gl.drawArrays(gl.TRIANGLE_STRIP, 0, debugQuad.numItems);
 
-                var t = nextTexture;
-                nextTexture = texture;
-                texture = nextTexture;
-                if(2 % i != 0)
-                    gl.activeTexture(gl.TEXTURE1);
-                else gl.activeTexture(gl.TEXTURE0);
+                // var t = nextTexture;
+                // nextTexture = texture;
+                // texture = nextTexture;
+                // if(2 % i != 0)
+                //     gl.activeTexture(gl.TEXTURE1);
+                // else gl.activeTexture(gl.TEXTURE0);
+                var t = texture2;
+                texture2 = texture;
+                texture = t;
+
                 i++;
         }
 
