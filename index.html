@@ -60,9 +60,15 @@
             #endif
 
             uniform sampler2D uSampler;
+            
+    
 
             void main() {
-                gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+
+                vec4 pos = texture2D(uSampler,vec2(0.0, 0.0));
+                pos.x += 0.2;
+
+                gl_FragColor = pos;
             }
         
         </script>
@@ -71,13 +77,20 @@
         <script>
             var     canvas,
                     gl,
-                    program, pUpdate;
+                    program, pUpdate,
+                    texture1, texture2, currentTexture,
+                    framebuffer,
+                    screenQuad,
+                    debugQuad,
+                    i = 1;
 
             function init() {
                 
+                glt.raf();
+
                 canvas = document.getElementById('canvas');
+                    
                 
-               
                 gl = glt.getGL(canvas, {premultipliedAlpha: true});
                 
                 gl.getExtension('OES_texture_float');
@@ -105,7 +118,7 @@
 
                
 
-                var texture;
+                
                 var image = new Image();
                 image.onload = function() {
 
@@ -120,7 +133,7 @@
                     /** DRAW TO DEBUG *************************************************/
                     gl.useProgram(program);
 
-                    var texture = glt.createStateTexture(gl);
+                    texture = glt.createStateTexture(gl);
                     gl.activeTexture(gl.TEXTURE0);
                     gl.uniform1i(program.samplerUniform, 0);
 
@@ -133,58 +146,67 @@
                     gl.drawArrays(gl.TRIANGLE_STRIP, 0, quad.numItems);
 
 
-
-
-                    /** DRAW TO FRAMEBUFFER --> UPDATE *************************************************/
-
-                    gl.useProgram(pUpdate);
-
-                    var nextTexture = glt.createStateTexture(gl);
-                    gl.bindTexture(gl.TEXTURE_2D, nextTexture);
+                    texture2 = glt.createStateTexture(gl);
+                    gl.bindTexture(gl.TEXTURE_2D, texture2);
                     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, stateTexSize, stateTexSize, 0, gl.RGB, gl.FLOAT, null);
+
+                    framebuffer = gl.createFramebuffer();
+                    screenQuad = glt.screenQuad(gl);
+                    debugQuad = glt.createArrayBuffer(gl, [ 0.5, -0.5,   1, -0.5,   0.5, -1,   1, -1 ], 2); 
                     
-                    var framebuffer = gl.createFramebuffer();
-                    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-                    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, nextTexture, 0);
 
-                    gl.clear(gl.COLOR_BUFFER_BIT);
-
-                    var quad = glt.screenQuad(gl);
-                    gl.vertexAttribPointer(pUpdate.vertexPosAttrib, quad.numComponents, gl.FLOAT, false, 0, 0);   
-                    gl.drawArrays(gl.TRIANGLE_STRIP, 0, quad.numItems);
-
-
-                     /** DRAW TO DEBUG  *************************************************/
-
-                    gl.useProgram(program); 
-                    gl.vertexAttribPointer(program.vertexPosAttrib, quad.numComponents, gl.FLOAT, false, 0, 0);   
-                    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-                    gl.drawArrays(gl.TRIANGLE_STRIP, 0, quad.numItems);
-                    // // Draw Triangle
-                    // var vertexPosBuffer = gl.createBuffer();
-                    // gl.bindBuffer(gl.ARRAY_BUFFER, vertexPosBuffer);
-                    // var vertices = [-0.5, -0.5, 0.5, -0.5, 0, 0.5];
-                    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-                    // gl.vertexAttribPointer(program.vertexPosAttrib, 2, gl.FLOAT, false, 0, 0);               
-                    // gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-
+                    
+                        
+                    draw();
                 }   
-                image.src = 'logo.png'
-                
-
-                
-
-
-
-               
-
-                
+                image.src = 'logo.png'                
             }
 
             function draw() {
 
-            }
+                requestAnimFrame(draw);
+
+
+                /** DRAW TO FRAMEBUFFER --> UPDATE *************************************************/
+
+                gl.useProgram(pUpdate);
+
+                gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+                
+                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture2, 0);
+
+                gl.clear(gl.COLOR_BUFFER_BIT);
+
+                gl.bindBuffer(gl.ARRAY_BUFFER, screenQuad);
+                gl.vertexAttribPointer(pUpdate.vertexPosAttrib, screenQuad.numComponents, gl.FLOAT, false, 0, 0);   
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, screenQuad.numItems);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+               
+
+
+                /** DRAW TO DEBUG  *************************************************/
+
+                gl.useProgram(program);
+
+                gl.activeTexture(gl.TEXTURE1);
+                gl.uniform1i(program.samplerUniform, 1);
+                gl.bindTexture(gl.TEXTURE_2D, texture2);
+
+
+                gl.bindBuffer(gl.ARRAY_BUFFER, debugQuad);
+                gl.vertexAttribPointer(program.vertexPosAttrib, debugQuad.numComponents, gl.FLOAT, false, 0, 0);   
+                
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, debugQuad.numItems);
+
+                var t = nextTexture;
+                nextTexture = texture;
+                texture = nextTexture;
+                if(2 % i != 0)
+                    gl.activeTexture(gl.TEXTURE1);
+                else gl.activeTexture(gl.TEXTURE0);
+                i++;
+        }
 
         </script>
 

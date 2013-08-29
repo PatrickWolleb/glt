@@ -115,6 +115,18 @@
     }
 
 
+    function raf() {
+
+        window.requestAnimFrame = (function(){
+            return  window.requestAnimationFrame       ||
+                window.webkitRequestAnimationFrame ||
+                window.mozRequestAnimationFrame    ||
+                function( callback ){
+                    window.setTimeout(callback, 1000 / 60);
+                };
+        })();
+    }
+
     window.glt = {
 
         compileShader : function(gl, shader) {
@@ -143,6 +155,10 @@
 
         createArrayBuffer : function(gl, vertices, components) {
             return createArrayBuffer(gl, vertices, components);
+        },
+
+        raf : function() {
+            raf();
         }
 
 
