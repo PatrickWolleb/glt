@@ -75,7 +75,7 @@
     function screenQuad(gl) {
         var vertexPosBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexPosBuffer);
-        var vertices = [-1, -1, 1, -1, -1, 1, 1, 1];
+        var vertices = [-1,-1,   1, -1,   -1, 1,   1, 1];
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
         vertexPosBuffer.numComponents = 2;
         vertexPosBuffer.numItems = 4;
