@@ -2,7 +2,7 @@
 <html>
     <head>
         
-        <script src="deps/glMatrix-0.9.5.min.js"></script>
+        <script src="deps/gl-Matrix.js"></script>
         <script src="glt.js"></script>
 
         <style type="text/css">
@@ -14,11 +14,13 @@
         <script id="vs" type="x-shader/x-vertex">
             
             attribute vec2 aPosition;
+            attribute vec2 aTexCoord;
+
             varying vec2 vTexCoord;
 
             void main() {
                 gl_Position = vec4(aPosition, 0, 1);
-                vTexCoord = aPosition;
+                vTexCoord = aTexCoord;
             }
         
         </script>
@@ -161,6 +163,7 @@
                 pDraw = glt.createProgram(gl, [vs,fs]);    
                
                 pDraw.vertexPosAttrib = gl.getAttribLocation(pDraw, 'aPosition');
+                 pDraw.vertexPosAttrib = gl.getAttribLocation(pDraw, 'aPosition');
                 pDraw.samplerUniform = gl.getUniformLocation(pDraw, 'uSampler');
                 gl.enableVertexAttribArray(pDraw.vertexPosAttrib);
 
@@ -172,6 +175,7 @@
                 program = glt.createProgram(gl, [vs,fs]);    
                 
                 program.vertexPosAttrib = gl.getAttribLocation(program, 'aPosition');
+                program.textureCoordAttrib = gl.getAttribLocation(program, 'aTexCoord');
                 program.samplerUniform = gl.getUniformLocation(program, 'uSampler');
                 gl.enableVertexAttribArray(program.vertexPosAttrib);
 
@@ -191,7 +195,7 @@
                 
 
                
-              
+                //gl.viewport(0, 0, stateTexSize * 2, stateTexSize * 2);
                 gl.useProgram(program);
 
                 texture = glt.createStateTexture(gl);
@@ -202,27 +206,40 @@
                 //gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image)
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, stateTexSize, stateTexSize, 0, gl.RGB, gl.FLOAT, stateData);
 
-                var q = glt.createArrayBuffer(gl, [
-                    -0.5,-0.5,   0.5, -0.5,   -0.5, 0.5,   0.5, 0.5
-                    ], 2);
-                gl.vertexAttribPointer(program.vertexPosAttrib, q.numComponents, gl.FLOAT, false, 0, 0);
+                var textureCoordinatesBuffer = glt.createArrayBuffer(gl, [
 
-                var indices = [0,1,2,    1,3,2];
+                    -1.0,-1.0,
+                    0.0,-1.0,
+                    0.0,0.0,
+                    -1.0,0.0,
+                    
+                    ] , 2);
+
+                gl.vertexAttribPointer(program.textureCoordAttrib, textureCoordinatesBuffer.numComponents, gl.FLOAT, false, 0, 0);
+
+                var q =  glt.createArrayBuffer(gl, [
+
+                    -1.0,-1.0,
+                    1.0,-1.0,
+                    1.0,1.0,
+                    -1.0,1.0,
+                    
+                    ] , 2);
+                gl.vertexAttribPointer(program.vertexPosAttrib, q.numComponents, gl.FLOAT, false, 0, 0);
+                
+
+
                 var indexBuffer = gl.createBuffer();
-                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER , indexBuffer);
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+                var indices = [
+                    0, 1, 3,      1, 2, 3,    
+                ];
                 gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
                 indexBuffer.numComponents = 1;
                 indexBuffer.numItems = 6;
 
-
-
-               
-
-                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
                 gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-
-                //gl.drawArrays(gl.TRIANGLE_STRIP, 0, q.numItems);
-
+                //gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 
 
 
@@ -243,7 +260,7 @@
                 textures = [texture, texture2];
 
 
-                   draw();
+                   //draw();
                     //setTimeout(draw, 1000);
                             
             }
