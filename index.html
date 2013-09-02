@@ -47,11 +47,12 @@
         <script id="vsUpdate" type="x-shader/x-vertex">
             
             attribute vec2 aPosition;
+            attribute vec2 aTexCoord;
             varying vec2 vTexCoord;
 
             void main() {
                 gl_Position = vec4(aPosition, 0, 1);
-                vTexCoord = aPosition;
+                vTexCoord = aTexCoord;
             }
         
         </script>
@@ -70,11 +71,11 @@
             void main() {
                 float offset = 0.0;
                 float uResolution = 2.0;
-                vec4 pos = texture2D(uSampler, (gl_FragCoord.xy + vec2(offset, 1)) / uResolution);
-                pos.x += 0.0002;
-                pos.y -= 0.002;
+                vec4 pos = texture2D(uSampler, (gl_FragCoord.xy + vec2(offset, 0.0)) / uResolution);
+                
+                //pos.y -= 0.002;
 
-
+                pos = vec4(1,1,1,1);
                 gl_FragColor = pos;
             }
         
@@ -125,6 +126,10 @@
                     framebuffer,
                     screenQuad,
                     debugQuad,
+                    debugIndex,
+                    debugTexCoord,
+                    debugMesh,
+                    updateMesh,
                     i = 1,
                     stateTexSize = 2,
                     image = new Image();
@@ -153,6 +158,7 @@
                 pUpdate = glt.createProgram(gl, [vs,fs]);
                 
                 pUpdate.vertexPosAttrib = gl.getAttribLocation(pUpdate, 'aPosition');
+                pUpdate.textureCoordAttrib = gl.getAttribLocation(pUpdate, 'aTexCoord');
                 pUpdate.samplerUniform = gl.getUniformLocation(pUpdate, 'uSampler');
 
 
@@ -163,7 +169,7 @@
                 pDraw = glt.createProgram(gl, [vs,fs]);    
                
                 pDraw.vertexPosAttrib = gl.getAttribLocation(pDraw, 'aPosition');
-                 pDraw.vertexPosAttrib = gl.getAttribLocation(pDraw, 'aPosition');
+                pDraw.vertexPosAttrib = gl.getAttribLocation(pDraw, 'aPosition');
                 pDraw.samplerUniform = gl.getUniformLocation(pDraw, 'uSampler');
                 gl.enableVertexAttribArray(pDraw.vertexPosAttrib);
 
@@ -194,82 +200,74 @@
 
                 
 
+
                
                 //gl.viewport(0, 0, stateTexSize * 2, stateTexSize * 2);
-                gl.useProgram(program);
+                
 
                 texture = glt.createStateTexture(gl);
                 gl.activeTexture(gl.TEXTURE0);
                 gl.bindTexture(gl.TEXTURE_2D, texture);
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-                
-                //gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image)
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, stateTexSize, stateTexSize, 0, gl.RGB, gl.FLOAT, stateData);
 
-                var textureCoordinatesBuffer = glt.createArrayBuffer(gl, [
-
-                    -1.0,-1.0,
-                    0.0,-1.0,
-                    0.0,0.0,
-                    -1.0,0.0,
-                    
-                    ] , 2);
-
-                gl.vertexAttribPointer(program.textureCoordAttrib, textureCoordinatesBuffer.numComponents, gl.FLOAT, false, 0, 0);
-
-                var q =  glt.createArrayBuffer(gl, [
-
-                    -1.0,-1.0,
-                    1.0,-1.0,
-                    1.0,1.0,
-                    -1.0,1.0,
-                    
-                    ] , 2);
-                gl.vertexAttribPointer(program.vertexPosAttrib, q.numComponents, gl.FLOAT, false, 0, 0);
-                
-
-
-                var indexBuffer = gl.createBuffer();
-                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-                var indices = [
-                    0, 1, 3,      1, 2, 3,    
-                ];
-                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-                indexBuffer.numComponents = 1;
-                indexBuffer.numItems = 6;
-
-                gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-                //gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-
-
-
-
-                
 
                 texture2 = glt.createStateTexture(gl);
                 gl.activeTexture(gl.TEXTURE1);
                 gl.bindTexture(gl.TEXTURE_2D, texture2);
+               
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, stateTexSize, stateTexSize, 0, gl.RGB, gl.FLOAT, null);
 
-                framebuffer = gl.createFramebuffer();
-                screenQuad = glt.screenQuad(gl);
-                debugQuad = glt.createArrayBuffer(gl, [ 0.5, -0.5,   1, -0.5,   0.5, -1,   1, -1 ], 2); 
-                points = glt.createArrayBuffer(gl, [0.0, 0.0, 0.1, 0.1], 2);
                 
 
-                textures = [texture, texture2];
+
+                gl.useProgram(program);
+                gl.activeTexture(gl.TEXTURE0);
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+                debugMesh = new glt.Mesh(gl, program, 
+                    [   -1.0,-1.0,
+                        1.0,-1.0,
+                        1.0,1.0,
+                        -1.0,1.0  ], 2, 
+
+                    [   0,1,3,  1,2,3   ],
+
+                    [   -1.0,-1.0,
+                        0.0,-1.0,
+                        0.0,0.0,
+                        -1.0,0.0        ]);
+                debugMesh.draw();
 
 
-                   //draw();
+                updateMesh = new glt.Mesh(gl, program, 
+                    [   -1.0,-1.0,
+                        1.0,-1.0,
+                        1.0,1.0,
+                        -1.0,1.0  ], 2, 
+
+                    [   0,1,3,  1,2,3   ],
+
+                    [   -1.0,-1.0,
+                        0.0,-1.0,
+                        0.0,0.0,
+                        -1.0,0.0        ]);
+
+                framebuffer = gl.createFramebuffer();
+                points = glt.createArrayBuffer(gl, [0.0, 0.0, 0.1, 0.1], 2);
+                screenQuad = glt.screenQuad(gl);
+
+                
+                canvas.addEventListener('click', draw)
+
+                  //draw();
                     //setTimeout(draw, 1000);
                             
             }
 
             function draw() {
 
-                requestAnimFrame(draw);
-
-                
+                //requestAnimFrame(draw);
+                //console.log('here')
 
                 /** DRAW TO FRAMEBUFFER --> UPDATE *************************************************/
 
@@ -291,6 +289,33 @@
                 
 
                 gl.clear(gl.COLOR_BUFFER_BIT);
+                
+                gl.bindBuffer(gl.ARRAY_BUFFER, screenQuad);
+                gl.vertexAttribPointer(pUpdate.vertexPosAttrib, screenQuad.numComponents, gl.FLOAT, false, 0, 0);   
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, screenQuad.numItems);
+                //updateMesh.draw()
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+
+                
+
+                gl.useProgram(program);
+                gl.activeTexture(gl.TEXTURE1);
+                gl.bindTexture(gl.TEXTURE_2D, texture2);
+                gl.uniform1i(program.samplerUniform, 1);
+
+                
+                var q = glt.screenQuad(gl);
+                gl.vertexAttribPointer(program.vertexPosAttrib, q.numComponents, gl.FLOAT, false, 0 ,0 );
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0 ,screenQuad.numItems);
+                debugMesh.draw();
+
+                console.log('DRWN')
+
+
+
+                return;
+
 
                 gl.bindBuffer(gl.ARRAY_BUFFER, screenQuad);
                 gl.vertexAttribPointer(pUpdate.vertexPosAttrib, screenQuad.numComponents, gl.FLOAT, false, 0, 0);   
@@ -298,11 +323,12 @@
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
                  gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
                
-
+                 return;
 
                 /** DRAW TO DEBUG  *************************************************/
 
                 gl.useProgram(program);
+
 
 
                 if( 2 % i == 0 ) {
@@ -315,11 +341,13 @@
                     gl.uniform1i(program.samplerUniform, 0);
                 }
 
+                debugMesh.draw()
+                
                 gl.bindBuffer(gl.ARRAY_BUFFER, screenQuad);
                 gl.vertexAttribPointer(program.vertexPosAttrib, screenQuad.numComponents, gl.FLOAT, false, 0, 0);   
                 gl.drawArrays(gl.TRIANGLE_STRIP, 0, screenQuad.numItems);
 
-                
+                return;
                 /** DRAW POINTS  *************************************************/
                 
                 gl.useProgram(pDraw);

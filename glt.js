@@ -8,6 +8,38 @@
 
 (function(){
 
+    "use strict";
+
+    
+    function Mesh(gl, program, vertices, vComponents, indices, texCoordinates) {
+        this.gl = gl;
+        this.program = program;
+
+
+        this.vertextBuffer = createArrayBuffer(gl, vertices, vComponents);
+        gl.vertexAttribPointer(program.vertexPosAttrib, this.vertextBuffer.numComponents, gl.FLOAT, false, 0, 0);
+
+
+        this.indexBuffer = createElementArrayBuffer(gl, indices, 1)
+
+        
+        this.textureCoordBuffer = createArrayBuffer(gl, texCoordinates, 2);
+        gl.vertexAttribPointer(program.textureCoordAttrib, this.textureCoordBuffer.numComponents, gl.FLOAT, false, 0, 0);
+
+    }
+
+    Mesh.prototype = {
+
+        draw : function() {
+            var gl = this.gl;
+            gl.useProgram(this.program);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+            gl.drawElements(gl.TRIANGLES, this.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+        }
+
+    }
+
     function getShader(gl, id) {
         var shaderScript = document.getElementById(id);
         if (!shaderScript) {
@@ -75,7 +107,10 @@
     function screenQuad(gl) {
         var vertexPosBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexPosBuffer);
-        var vertices = [-1,-1,   1, -1,   -1, 1,   1, 1];
+        var vertices = [ -1.0,-1.0,
+                    1.0,-1.0,
+                    1.0,1.0,
+                    -1.0,1.0];
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
         vertexPosBuffer.numComponents = 2;
         vertexPosBuffer.numItems = 4;
@@ -88,6 +123,15 @@
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
         buffer.numComponents = components;
         buffer.numItems = vertices.length / components;
+        return buffer;
+    }
+
+    function createElementArrayBuffer(gl, indices, components) {
+        var buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+        buffer.numComponents = components;
+        buffer.numItems = indices.length / components;
         return buffer;
     }
 
@@ -128,6 +172,8 @@
     }
 
     window.glt = {
+
+        Mesh : Mesh,
 
         compileShader : function(gl, shader) {
             return getShader(gl, shader);
