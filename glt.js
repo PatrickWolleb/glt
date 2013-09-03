@@ -11,49 +11,34 @@
     "use strict";
 
     
-    function Mesh(gl, program, vertices, vComponents, indices, texCoordinates) {
+    function Mesh(gl, program, vertices, vComponents, indices, texCoordinates, drawMode) {
         this.gl = gl;
         this.program = program;
+        this.drawMode = drawMode || gl.TRIANGLES;
 
-
-        this.vertextBuffer = createArrayBuffer(gl, vertices, vComponents);
-        gl.vertexAttribPointer(program.vertexPosAttrib, this.vertextBuffer.numComponents, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(program.vertexPosAttrib);
-
-        this.indexBuffer = createElementArrayBuffer(gl, indices, 1)
-
-        
+        this.vertexBuffer = createArrayBuffer(gl, vertices, vComponents);
         this.textureCoordBuffer = createArrayBuffer(gl, texCoordinates, 2);
-        gl.vertexAttribPointer(program.textureCoordAttrib, this.textureCoordBuffer.numComponents, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(program.textureCoordAttrib);
-
+        this.indexBuffer = createElementArrayBuffer(gl, indices, 1)
     }
 
     Mesh.prototype = {
 
         draw : function() {
-            //this.bind();
-            var gl = this.gl;
-            gl.useProgram(this.program);
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-
-            gl.drawElements(gl.TRIANGLES, this.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-            //this.unbind();
-        },
-
-        bind : function() {
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.vertextBuffer);
-        },
-
-        unbind: function() {
             var gl = this.gl;
             var program = this.program;
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.vertextBuffer);
-            gl.disableVertexAttribArray(program.vertexPosAttrib);
+            
+            gl.useProgram(program);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+            gl.vertexAttribPointer(program.vertexPosAttrib, this.vertexBuffer.numComponents, gl.FLOAT, false, 0, 0);
+
             gl.bindBuffer(gl.ARRAY_BUFFER, this.textureCoordBuffer);
-            gl.disableVertexAttribArray(program.textureCoordAttrib);
-        }
+            gl.vertexAttribPointer(program.textureCoordAttrib, this.textureCoordBuffer.numComponents, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+            gl.drawElements(this.drawMode, this.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+        }   
 
     }
 
