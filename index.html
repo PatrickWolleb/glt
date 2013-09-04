@@ -73,7 +73,8 @@
                 float uResolution = 2.0;
                 vec4 pos = texture2D(uSampler, gl_FragCoord.xy / 2.0);
                 
-                pos.y -= 0.1;
+                //pos.y += pos.y * 0.1;
+                //pos.x -= pos.x * 0.1;
 
                 //pos *= 1.01;
                 // /pos.y = 0.5;
@@ -118,7 +119,7 @@
 
 
             void main() {
-                gl_FragColor = vec4(0,0,0,1);
+                gl_FragColor = vec4(1,0,0,1);
             }
         
         </script>
@@ -203,8 +204,8 @@
 
                 for(var i = 0; i < stateTexSize*stateTexSize; ++i) {
                     var base = i * 3;
-                    stateData[base] = Math.random();
-                    stateData[base + 1] = Math.random();
+                    stateData[base] = 0.0;
+                    stateData[base + 1] = 1 / i - 0.5;
                     stateData[base + 2] = 0.0;
                 }
 
@@ -397,10 +398,7 @@
                     gl.bindTexture(gl.TEXTURE_2D, texture2);
                     gl.uniform1i(pDraw.samplerUniform, 0);
                 }
-                 
-
-                gl.bindBuffer(gl.ARRAY_BUFFER, pointsTexCoords);
-                gl.vertexAttribPointer(pDraw.vertexPosAttrib, pointsTexCoords.numComponents, gl.FLOAT, false, 0, 0);
+                
 
                 gl.bindBuffer(gl.ARRAY_BUFFER, points);
                 gl.vertexAttribPointer(pDraw.vertexPosAttrib, points.numComponents, gl.FLOAT, false, 0, 0);
