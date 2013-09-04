@@ -73,8 +73,8 @@
                 float uResolution = 2.0;
                 vec4 pos = texture2D(uSampler, gl_FragCoord.xy / 2.0);
                 
-                //pos.y += pos.y * 0.1;
-                //pos.x -= pos.x * 0.1;
+                pos.y +=  0.01;
+                pos.x -= pos.x * 0.1;
 
                 //pos *= 1.01;
                 // /pos.y = 0.5;
@@ -102,7 +102,7 @@
             void main() {
                 gl_PointSize = 5.0;
                 vec2 pos = aPosition;
-                gl_Position = texture2D(uSampler, aPosition.xy * 2.0);
+                gl_Position = texture2D(uSampler,pos);
                 vTexCoord = aTexCoord;
             }
         
@@ -202,12 +202,31 @@
 
                 var stateData = new Float32Array(stateTexSize * stateTexSize* 3);
 
-                for(var i = 0; i < stateTexSize*stateTexSize; ++i) {
-                    var base = i * 3;
-                    stateData[base] = 0.0;
-                    stateData[base + 1] = 1 / i - 0.5;
-                    stateData[base + 2] = 0.0;
-                }
+                // for(var i = 0; i < stateTexSize*stateTexSize; ++i) {
+                //     var base = i * 3;
+                //     stateData[base] = 0.0;
+                //     stateData[base + 1] = 1 / i - 0.5;
+                //     stateData[base + 2] = 0.0;
+                // }
+
+                // NEGATIVE VALUES
+                // It seems to work on my hardware but might have issues on others. 
+                stateData[0] = -0.5;
+                stateData[1] = 0.5;
+                stateData[2] = 0.0;
+
+                stateData[3] = 0.5;
+                stateData[4] = 0.5;
+                stateData[5] = 0.0;
+
+                stateData[6] = -0.5;
+                stateData[7] = -0.5;
+                stateData[8] = 0.0;
+
+                stateData[9] = 0.5;
+                stateData[10] = -0.5;
+                stateData[11] = 0.0;
+
 
                 //gl.viewport(0, 0, stateTexSize * 2, stateTexSize * 2);
                 
@@ -301,7 +320,11 @@
 
                 
                 
-                points = glt.createArrayBuffer(gl, [0.0, 0.0, -0.1, 0.1], 2);
+                points = glt.createArrayBuffer(gl, [    0.0, 0.0,   
+                                                        0.5, 0.0,
+                                                        0.5, 0.5, 
+                                                        0.0, 0.5    ], 2);
+
                 pointsTexCoords = glt.createArrayBuffer(gl, [0.0, 0.0, 1.0, 0.0], 2);
                 
                 gl.enableVertexAttribArray(pDraw.vertexPosAttrib);    
@@ -311,7 +334,7 @@
                 gl.vertexAttribPointer(pDraw.textureCoordAttrib, pointsTexCoords.numComponents, gl.FLOAT, false, 0, 0);
 
                 
-                gl.drawArrays(gl.POINTS, 0, points.numItems);
+                //gl.drawArrays(gl.POINTS, 0, points.numItems);
                 
                 canvas.addEventListener('click', draw)
 
@@ -322,7 +345,7 @@
 
             function draw() {
 
-                //requestAnimFrame(draw);
+                requestAnimFrame(draw);
                 //console.log('here')
 
 
