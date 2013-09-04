@@ -7,7 +7,7 @@
 
         <style type="text/css">
         body { background: #333; }
-        canvas { background: #000; }
+        canvas { background: #fff; }
 
         </style>
 
@@ -48,11 +48,17 @@
             
             attribute vec2 aPosition;
             attribute vec2 aTexCoord;
+            
+            uniform vec2 uMouse;
+
+            varying vec2 vMouse;
             varying vec2 vTexCoord;
+
 
             void main() {
                 gl_Position = vec4(aPosition, 0, 1);
                 vTexCoord = aTexCoord;
+                vMouse = uMouse;
             }
         
         </script>
@@ -68,14 +74,32 @@
             uniform float uStateTexSize;
 
             varying vec2 vTexCoord;
-    
+            varying vec2 vMouse;
 
             void main() {
                 float offset = 0.0;
                 vec4 pos = texture2D(uSampler, gl_FragCoord.xy / uStateTexSize);
                 
-                pos.y -= pos.y * .01;
-                pos.x -= pos.x * 0.01;
+                vec3 vPos = pos.xyz;
+                //pos.xy += mouse.xy;
+                vec3 m = vec3(vMouse, 0.0);
+                
+                m.y *= -1.0;
+                float d = distance(vPos,m);
+
+                if(d < 0.5) { 
+
+                   pos.x += (0.5 - d) * m.x;
+                   //pos.y += (4.1 - d) * m.y;
+                   //pos.z += (4.1 - d) * 5.0;
+
+                }else {
+                    
+                }
+
+                //vec2 mouse = normalize(vMouse);
+
+                //pos += vec4(mouse, 0.0, 0.1) * 0.01;
 
                 //pos *= 1.01;
                 // /pos.y = 0.5;
@@ -97,7 +121,7 @@
             uniform sampler2D uSampler;
 
             void main() {
-                gl_PointSize = .1;
+                gl_PointSize = .3;
                 vec2 pos = aPosition;
                 gl_Position = texture2D(uSampler,pos);
             }
@@ -115,7 +139,7 @@
 
 
             void main() {
-                gl_FragColor = vec4(1,0,0,.3);
+                gl_FragColor = vec4(0,0,0,1);
             }
         
         </script>
@@ -141,7 +165,8 @@
                     points,
                     pointsTexCoords,
                     i = 1,
-                    stateTexSize = 256*8,
+                    mouse,
+                    stateTexSize = 256*4,
                     image = new Image();
                     image.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyNpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNS1jMDE0IDc5LjE1MTQ4MSwgMjAxMy8wMy8xMy0xMjowOToxNSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIChNYWNpbnRvc2gpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjE1NTdBRDlDMDkzMzExRTM4RDZBQTQ5MzlCQzE2QUVFIiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOjE1NTdBRDlEMDkzMzExRTM4RDZBQTQ5MzlCQzE2QUVFIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6NUMxOTFDRkYwOTIwMTFFMzhENkFBNDkzOUJDMTZBRUUiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6NUMxOTFEMDAwOTIwMTFFMzhENkFBNDkzOUJDMTZBRUUiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz6RL2zbAAAAGUlEQVR42mL6z8DA8N+P8f86BsZf/wECDAAk4QX3y2+LyQAAAABJRU5ErkJggg==';
 
@@ -170,6 +195,7 @@
                 pUpdate.textureCoordAttrib = gl.getAttribLocation(pUpdate, 'aTexCoord');
                 pUpdate.samplerUniform = gl.getUniformLocation(pUpdate, 'uSampler');
                 pUpdate.stateTexSizeUniform = gl.getUniformLocation(pUpdate, 'uStateTexSize');
+                pUpdate.mouseUniform = gl.getUniformLocation(pUpdate, 'uMouse');
 
 
 
@@ -261,7 +287,7 @@
                         0.0,-1.0,
                         0.0,0.0,
                         -1.0,0.0        ]);
-                debugMesh.draw();
+                //debugMesh.draw();
 
 
 
@@ -293,7 +319,7 @@
                 
                 
                
-
+                mouse = [1.0, 1.0];
                
 
                 
@@ -307,7 +333,11 @@
             }
 
             function mousemoved(e) {
-                
+                var hW = canvas.width * .5;
+                var hH = canvas.height * .5;
+
+                mouse[0] = (e.clientX - hW) / hW;
+                mouse[1] = (e.clientY - hH) / hH;
             }
 
             function draw() {
@@ -340,6 +370,7 @@
                 
 
                 gl.uniform1f(pUpdate.stateTexSizeUniform, stateTexSize);
+                gl.uniform2fv(pUpdate.mouseUniform, mouse);
                
                 updateMesh.draw();
                 //gl.disableVertexAttribArray(pUpdate.vertexPosAttrib);
