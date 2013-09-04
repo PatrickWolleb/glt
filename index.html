@@ -65,13 +65,14 @@
             #endif
 
             uniform sampler2D uSampler;
+            uniform float uStateTexSize;
+
             varying vec2 vTexCoord;
     
 
             void main() {
                 float offset = 0.0;
-                float uResolution = 2.0;
-                vec4 pos = texture2D(uSampler, gl_FragCoord.xy / 2.0);
+                vec4 pos = texture2D(uSampler, gl_FragCoord.xy / uStateTexSize);
                 
                 pos.y -= pos.y * .01;
                 pos.x -= pos.x * 0.01;
@@ -96,7 +97,7 @@
             uniform sampler2D uSampler;
 
             void main() {
-                gl_PointSize = 5.0;
+                gl_PointSize = 1.0;
                 vec2 pos = aPosition;
                 gl_Position = texture2D(uSampler,pos);
             }
@@ -140,7 +141,7 @@
                     points,
                     pointsTexCoords,
                     i = 1,
-                    stateTexSize = 2,
+                    stateTexSize = 256*4,
                     image = new Image();
                     image.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyNpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNS1jMDE0IDc5LjE1MTQ4MSwgMjAxMy8wMy8xMy0xMjowOToxNSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIChNYWNpbnRvc2gpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjE1NTdBRDlDMDkzMzExRTM4RDZBQTQ5MzlCQzE2QUVFIiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOjE1NTdBRDlEMDkzMzExRTM4RDZBQTQ5MzlCQzE2QUVFIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6NUMxOTFDRkYwOTIwMTFFMzhENkFBNDkzOUJDMTZBRUUiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6NUMxOTFEMDAwOTIwMTFFMzhENkFBNDkzOUJDMTZBRUUiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz6RL2zbAAAAGUlEQVR42mL6z8DA8N+P8f86BsZf/wECDAAk4QX3y2+LyQAAAABJRU5ErkJggg==';
 
@@ -166,6 +167,7 @@
                 pUpdate.vertexPosAttrib = gl.getAttribLocation(pUpdate, 'aPosition');
                 pUpdate.textureCoordAttrib = gl.getAttribLocation(pUpdate, 'aTexCoord');
                 pUpdate.samplerUniform = gl.getUniformLocation(pUpdate, 'uSampler');
+                pUpdate.stateTexSizeUniform = gl.getUniformLocation(pUpdate, 'uStateTexSize');
 
 
 
@@ -194,31 +196,30 @@
                 gl.enableVertexAttribArray(program.vertexPosAttrib);
 
                 var stateData = new Float32Array(stateTexSize * stateTexSize* 3);
-                var pointsGeometry = [];
+                 var length = stateTexSize*stateTexSize; 
 
-                var j = 0;
-
-                var length = stateTexSize*stateTexSize;
-                for(var i = 0; i < length; ++i) {
+                 for(var i = 0; i < length; ++i) {
                     var base = i * 3;
                     stateData[base] = Math.random() - .5;
                     stateData[base + 1] = Math.random() - .5;
                     stateData[base + 2] = 0.0;
+                }
 
-                    base = i * 2;
+                var pointsGeometry = [];
+                for(var i = 0; i < stateTexSize; i++) {
+                    for(var j = 0; j < stateTexSize; j++) {
+                        base = (i+j) * 2;
+                        pointsGeometry.push(i/stateTexSize)
+                        pointsGeometry.push(j/stateTexSize)
 
-
-                    if(i % stateTexSize == 0) {
-                        
-                        j++;
                     }
-                    // X
-                    pointsGeometry[base] = (length-1) / i;
-                    pointsGeometry[base+1] = (stateTexSize - 1) / j; 
-
-                    
 
                 }
+
+
+               
+                
+                console.log('NumParticles', pointsGeometry.length/2)
 
                  points = glt.createArrayBuffer(gl,  pointsGeometry  , 2);
 
@@ -351,10 +352,14 @@
                 //gl.drawArrays(gl.POINTS, 0, points.numItems);
                 
                 canvas.addEventListener('click', draw)
-
+                canvas.addEventListener('mousemove', mousemoved);
                  // draw();
                     //setTimeout(draw, 1000);
                             
+            }
+
+            function mousemoved(e) {
+                console.log(e.pageX);
             }
 
             function draw() {
@@ -386,7 +391,7 @@
                 }
                 
 
-                
+                gl.uniform1f(pUpdate.stateTexSizeUniform, stateTexSize);
                
                 updateMesh.draw();
                 //gl.disableVertexAttribArray(pUpdate.vertexPosAttrib);
@@ -430,10 +435,12 @@
                     gl.activeTexture(gl.TEXTURE1);
                     gl.bindTexture(gl.TEXTURE_2D, texture2);
                     gl.uniform1i(pDraw.samplerUniform, 1);
+                    
                 }else {
                     gl.activeTexture(gl.TEXTURE0);
                     gl.bindTexture(gl.TEXTURE_2D, texture2);
                     gl.uniform1i(pDraw.samplerUniform, 0);
+                   
                 }
                 
 
