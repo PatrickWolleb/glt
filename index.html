@@ -73,8 +73,8 @@
                 float uResolution = 2.0;
                 vec4 pos = texture2D(uSampler, gl_FragCoord.xy / 2.0);
                 
-                pos.y +=  0.01;
-                pos.x -= pos.x * 0.1;
+                pos.y -= pos.y * .01;
+                pos.x -= pos.x * 0.01;
 
                 //pos *= 1.01;
                 // /pos.y = 0.5;
@@ -93,17 +93,12 @@
         <script id="vsDraw" type="x-shader/x-vertex">
             
             attribute vec2 aPosition;
-            attribute vec2 aTexCoord;
-            varying vec2 vTexCoord;
-
-
             uniform sampler2D uSampler;
 
             void main() {
                 gl_PointSize = 5.0;
                 vec2 pos = aPosition;
                 gl_Position = texture2D(uSampler,pos);
-                vTexCoord = aTexCoord;
             }
         
         </script>
@@ -182,8 +177,6 @@
                 gl.useProgram(pDraw);   
                 pDraw.vertexPosAttrib = gl.getAttribLocation(pDraw, 'aPosition');
                 gl.enableVertexAttribArray(pDraw.vertexPosAttrib);                
-                pDraw.textureCoordAttrib = gl.getAttribLocation(pDraw, 'aTexCoord');
-                gl.enableVertexAttribArray(pDraw.textureCoordAttrib); 
                 pDraw.samplerUniform = gl.getUniformLocation(pDraw, 'uSampler');
                 
                
@@ -201,31 +194,61 @@
                 gl.enableVertexAttribArray(program.vertexPosAttrib);
 
                 var stateData = new Float32Array(stateTexSize * stateTexSize* 3);
+                var pointsGeometry = [];
 
-                // for(var i = 0; i < stateTexSize*stateTexSize; ++i) {
-                //     var base = i * 3;
-                //     stateData[base] = 0.0;
-                //     stateData[base + 1] = 1 / i - 0.5;
-                //     stateData[base + 2] = 0.0;
-                // }
+                var j = 0;
+
+                var length = stateTexSize*stateTexSize;
+                for(var i = 0; i < length; ++i) {
+                    var base = i * 3;
+                    stateData[base] = Math.random() - .5;
+                    stateData[base + 1] = Math.random() - .5;
+                    stateData[base + 2] = 0.0;
+
+                    base = i * 2;
+
+
+                    if(i % stateTexSize == 0) {
+                        
+                        j++;
+                    }
+                    // X
+                    pointsGeometry[base] = (length-1) / i;
+                    pointsGeometry[base+1] = (stateTexSize - 1) / j; 
+
+                    
+
+                }
+
+                 points = glt.createArrayBuffer(gl,  pointsGeometry  , 2);
+
+                  // points = glt.createArrayBuffer(gl, [    0.0, 0.0,   
+                  //                                       0.5, 0.0,
+                  //                                       0.5, 0.5, 
+                  //                                       0.0, 0.5    ], 2);
+
+                
+                
+                gl.enableVertexAttribArray(pDraw.vertexPosAttrib);    
+                gl.vertexAttribPointer(pDraw.vertexPosAttrib, points.numComponents, gl.FLOAT, false, 0, 0);
 
                 // NEGATIVE VALUES
                 // It seems to work on my hardware but might have issues on others. 
-                stateData[0] = -0.5;
-                stateData[1] = 0.5;
-                stateData[2] = 0.0;
+                // stateData[0] = -0.5;
+                // stateData[1] = 0.5;
+                // stateData[2] = 0.0;
 
-                stateData[3] = 0.5;
-                stateData[4] = 0.5;
-                stateData[5] = 0.0;
+                // stateData[3] = 0.5;
+                // stateData[4] = 0.5;
+                // stateData[5] = 0.0;
 
-                stateData[6] = -0.5;
-                stateData[7] = -0.5;
-                stateData[8] = 0.0;
+                // stateData[6] = -0.5;
+                // stateData[7] = -0.5;
+                // stateData[8] = 0.0;
 
-                stateData[9] = 0.5;
-                stateData[10] = -0.5;
-                stateData[11] = 0.0;
+                // stateData[9] = 0.5;
+                // stateData[10] = -0.5;
+                // stateData[11] = 0.0;
 
 
                 //gl.viewport(0, 0, stateTexSize * 2, stateTexSize * 2);
@@ -320,18 +343,9 @@
 
                 
                 
-                points = glt.createArrayBuffer(gl, [    0.0, 0.0,   
-                                                        0.5, 0.0,
-                                                        0.5, 0.5, 
-                                                        0.0, 0.5    ], 2);
+               
 
-                pointsTexCoords = glt.createArrayBuffer(gl, [0.0, 0.0, 1.0, 0.0], 2);
-                
-                gl.enableVertexAttribArray(pDraw.vertexPosAttrib);    
-                gl.vertexAttribPointer(pDraw.vertexPosAttrib, points.numComponents, gl.FLOAT, false, 0, 0);
-
-                gl.enableVertexAttribArray(pDraw.textureCoordAttrib);    
-                gl.vertexAttribPointer(pDraw.textureCoordAttrib, pointsTexCoords.numComponents, gl.FLOAT, false, 0, 0);
+               
 
                 
                 //gl.drawArrays(gl.POINTS, 0, points.numItems);
