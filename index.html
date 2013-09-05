@@ -179,7 +179,7 @@
             uniform sampler2D uSampler;
 
             void main() {
-                gl_PointSize = .4;
+                gl_PointSize = .3;
                 vec2 pos = aPosition;
                 gl_Position = texture2D(uSampler,pos);
             }
@@ -352,7 +352,7 @@
                         0.0,-1.0,
                         0.0,0.0,
                         -1.0,0.0        ]);
-                debugMesh.draw();
+                //debugMesh.draw();
 
 
 
@@ -390,11 +390,11 @@
                 
                 //gl.drawArrays(gl.POINTS, 0, points.numItems);
                 
-                canvas.addEventListener('click', draw)
+                //canvas.addEventListener('click', draw)
                 canvas.addEventListener('mousemove', mousemoved);
                 
 
-                 // draw();
+                draw();
                     //setTimeout(draw, 1000);
                             
             }
@@ -410,10 +410,7 @@
             function draw() {
 
                 requestAnimFrame(draw);
-                //console.log('here')
-
-
-
+            
 
 
                 /** DRAW TO FRAMEBUFFER --> UPDATE *************************************************/                
@@ -440,9 +437,7 @@
                 gl.uniform2fv(pUpdate.mouseUniform, mouse);
                
                 updateMesh.draw();
-                //gl.disableVertexAttribArray(pUpdate.vertexPosAttrib);
-                //gl.disableVertexAttribArray(pUpdate.textureCoordAttrib);
-
+                
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
                 gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 
@@ -452,17 +447,17 @@
 
 
                 /** DRAW TO DEBUG  *************************************************/
-                gl.useProgram(program);
+                // gl.useProgram(program);
 
-                if( 2 % i == 0 ) {
-                    gl.activeTexture(gl.TEXTURE1);
-                    gl.bindTexture(gl.TEXTURE_2D, texture2);
-                    gl.uniform1i(program.samplerUniform, 1);
-                }else {
-                    gl.activeTexture(gl.TEXTURE0);
-                    gl.bindTexture(gl.TEXTURE_2D, texture2);
-                    gl.uniform1i(program.samplerUniform, 0);
-                }
+                // if( 2 % i == 0 ) {
+                //     gl.activeTexture(gl.TEXTURE1);
+                //     gl.bindTexture(gl.TEXTURE_2D, texture2);
+                //     gl.uniform1i(program.samplerUniform, 1);
+                // }else {
+                //     gl.activeTexture(gl.TEXTURE0);
+                //     gl.bindTexture(gl.TEXTURE_2D, texture2);
+                //     gl.uniform1i(program.samplerUniform, 0);
+                // }
 
                 
                 //debugMesh.draw();
@@ -473,8 +468,6 @@
               
                 
                 /** DRAW POINTS  *************************************************/
-                
-
                 gl.useProgram(pDraw);
 
                 if( 2 % i == 0 ) {
@@ -492,15 +485,11 @@
 
                 gl.bindBuffer(gl.ARRAY_BUFFER, points);
                 gl.vertexAttribPointer(pDraw.vertexPosAttrib, points.numComponents, gl.FLOAT, false, 0, 0);
-
                 gl.drawArrays(gl.POINTS, 0, points.numItems);
                 
-                //drawMesh.draw();
-
-
-                console.log('ERROR', gl.getError())
+               
                 
-
+                /** SWAP TEXTURES  *************************************************/
                 var t = texture2;
                 texture2 = texture;
                 texture = t;
@@ -513,7 +502,7 @@
     </head>
 
     <body onload="init()">
-        <canvas id="canvas" width="1920" height="1280" />
+        <canvas id="canvas" width="1000" height="700" />
     </body>
 
 
