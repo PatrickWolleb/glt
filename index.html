@@ -101,23 +101,57 @@
 
                     float d = distance(pos.xy, vMouse);
 
+
+                        // vec2 delta = (pos.xy - vMouse);
+
+                        
+                        // delta = normalize(delta);
+
+                        // float weight = exp2(-d/ 0.2) ;
+
+                        // delta *=    (.001 * -weight);
+
+                        // vel -= vec4(delta, 0.0, 0.0);
+
                     if( d < 0.2 ) {
 
-                        vec2 delta = pos.xy - vMouse;
+                        vec2 delta = (pos.xy - vMouse);
 
-                        float weight = length(delta); 
+
+
+                        float weight = 100.0 / 0.2 * d * 0.01;
 
                         weight *= 0.01;
 
 
                         delta = normalize(delta);
 
-                        delta *= .001 + weight;
+                        delta *= (.001 + weight) * d;
 
                         vel += vec4(delta, 0.0, 0.0);
 
 
                     }
+
+                    d = distance(pos.xy, vec2(1.0, -1.0));
+
+                        if(d <  0.5) {
+
+                            vec2 delta = (pos.xy - vec2(1.0, -1.0));
+
+                            delta = normalize(delta);
+
+                            float weight = exp(d);
+
+                            delta *= (.001 * -weight);
+
+                            //vel += vec4(delta, 0.0, 0.0);
+                        
+                        } else {
+
+                            //vel.xy *= 0.0;
+                        }
+                       
 
                     vel *= 0.95;
 
@@ -197,7 +231,7 @@
 
 
             void main() {
-                gl_FragColor = vec4(1,0,0,1.0);
+                gl_FragColor = vec4(0,0,0,1.0);
             }
         
         </script>
