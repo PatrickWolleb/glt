@@ -76,26 +76,78 @@
             varying vec2 vTexCoord;
             varying vec2 vMouse;
 
+            vec4 lookup(float offset) {
+                return texture2D(uSampler, (gl_FragCoord.xy + vec2(offset, 0.0)) / uStateTexSize);
+            }
+
             void main() {
                 float offset = 0.0;
-                vec4 pos = texture2D(uSampler, gl_FragCoord.xy / uStateTexSize);
-                
-                vec3 vPos = pos.xyz;
-                //pos.xy += mouse.xy;
-                vec3 m = vec3(vMouse, 0.0);
-                
-                m.y *= -1.0;
-                float d = distance(vPos,m);
+                bool updatingPosition = mod(gl_FragCoord.x, 2.0) < 1.0;
+                vec4 pos, vel;
+                if (updatingPosition) {
+                    pos = lookup(0.0);
+                    vel = lookup(1.0);
 
-                if(d < 0.5) { 
+                    pos.xy += vel.xy;
 
-                   pos.x += (0.5 - d) * m.x;
-                   //pos.y += (4.1 - d) * m.y;
-                   //pos.z += (4.1 - d) * 5.0;
-
-                }else {
                     
+
+                } else {
+                    pos = lookup(-1.0);
+                    vel = lookup(0.0);
+
+                    
+
+
+                    float d = distance(pos.xy, vMouse);
+
+                    if( d < 0.2 ) {
+
+                        vec2 delta = pos.xy - vMouse;
+
+                        float weight = length(delta); 
+
+                        weight *= 0.01;
+
+
+                        delta = normalize(delta);
+
+                        delta *= .001 + weight;
+
+                        vel += vec4(delta, 0.0, 0.0);
+
+
+                    }
+
+                    vel *= 0.95;
+
+
+
+
+
+                   
                 }
+
+
+
+
+                
+                // vec3 vPos = pos.xyz;
+                // //pos.xy += mouse.xy;
+                // vec3 m = vec3(vMouse, 0.0);
+                
+                // m.y *= -1.0;
+                // float d = distance(vPos,m);
+
+                // if(d < 0.2) { 
+
+                //    pos.x += (0.2 - d) * m.x;
+                //    //pos.y += (4.1 - d) * m.y;
+                //    //pos.z += (4.1 - d) * 5.0;
+
+                // }else {
+                    
+                // }
 
                 //vec2 mouse = normalize(vMouse);
 
@@ -105,7 +157,13 @@
                 // /pos.y = 0.5;
 
                // pos = vec4(1,0,0,1);
-                gl_FragColor = pos;
+
+                if (updatingPosition) {
+                    gl_FragColor = pos;    
+                } else {
+                    gl_FragColor = vel;
+                }
+                
             }
         
         </script>
@@ -121,7 +179,7 @@
             uniform sampler2D uSampler;
 
             void main() {
-                gl_PointSize = .3;
+                gl_PointSize = .4;
                 vec2 pos = aPosition;
                 gl_Position = texture2D(uSampler,pos);
             }
@@ -139,7 +197,7 @@
 
 
             void main() {
-                gl_FragColor = vec4(0,0,0,1);
+                gl_FragColor = vec4(1,0,0,1.0);
             }
         
         </script>
@@ -228,14 +286,21 @@
 
 
                 /** CREATE DATA ******************************************************/
-                var stateData = new Float32Array(stateTexSize * stateTexSize* 3);
+                var stateData = new Float32Array(stateTexSize * stateTexSize* 6);
                 var length = stateTexSize*stateTexSize; 
 
                  for(var i = 0; i < length; ++i) {
-                    var base = i * 3;
+                    var base = i * 6;
+                    
+                    // position
                     stateData[base] = (Math.random() - .5) * 2 ;
                     stateData[base + 1] = (Math.random() - .5) * 2;
                     stateData[base + 2] = 0.0;
+
+                    // velocity
+                    stateData[base + 3] = 0.0;
+                    stateData[base + 4] = 0.0;
+                    stateData[base + 5] = 100.0;
                 }
 
                 var pointsGeometry = [];
@@ -247,9 +312,9 @@
                     }
                 }
 
+                console.log(stateData)
 
-
-                console.log(pointsGeometry.length + ' Particles');
+                console.log(pointsGeometry.length/2 + ' Particles');
                
                 
                
@@ -287,7 +352,7 @@
                         0.0,-1.0,
                         0.0,0.0,
                         -1.0,0.0        ]);
-                //debugMesh.draw();
+                debugMesh.draw();
 
 
 
@@ -327,6 +392,8 @@
                 
                 canvas.addEventListener('click', draw)
                 canvas.addEventListener('mousemove', mousemoved);
+                
+
                  // draw();
                     //setTimeout(draw, 1000);
                             
@@ -337,7 +404,7 @@
                 var hH = canvas.height * .5;
 
                 mouse[0] = (e.clientX - hW) / hW;
-                mouse[1] = (e.clientY - hH) / hH;
+                mouse[1] = (e.clientY - hH) / -hH;
             }
 
             function draw() {
@@ -385,20 +452,20 @@
 
 
                 /** DRAW TO DEBUG  *************************************************/
-                // gl.useProgram(program);
+                gl.useProgram(program);
 
-                // if( 2 % i == 0 ) {
-                //     gl.activeTexture(gl.TEXTURE1);
-                //     gl.bindTexture(gl.TEXTURE_2D, texture2);
-                //     gl.uniform1i(program.samplerUniform, 1);
-                // }else {
-                //     gl.activeTexture(gl.TEXTURE0);
-                //     gl.bindTexture(gl.TEXTURE_2D, texture2);
-                //     gl.uniform1i(program.samplerUniform, 0);
-                // }
+                if( 2 % i == 0 ) {
+                    gl.activeTexture(gl.TEXTURE1);
+                    gl.bindTexture(gl.TEXTURE_2D, texture2);
+                    gl.uniform1i(program.samplerUniform, 1);
+                }else {
+                    gl.activeTexture(gl.TEXTURE0);
+                    gl.bindTexture(gl.TEXTURE_2D, texture2);
+                    gl.uniform1i(program.samplerUniform, 0);
+                }
 
                 
-                // debugMesh.draw();
+                //debugMesh.draw();
 
                 
 
@@ -446,7 +513,7 @@
     </head>
 
     <body onload="init()">
-        <canvas id="canvas" width="1920" height="1080" />
+        <canvas id="canvas" width="1920" height="1280" />
     </body>
 
 
